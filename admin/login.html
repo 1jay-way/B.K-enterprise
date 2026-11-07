@@ -1,158 +1,85 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
   <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
 
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
+  <title>B.K Enterprise | Admin Portal</title>
 
-  <title>Brychi Admin — Login</title>
+  <link rel="stylesheet" href="admin.css">
 
-  <link
-    rel="stylesheet" 
-  
-    href="admin.css"
-  >
-
+  <meta name="theme-color" content="#123D2B">
 </head>
-
 
 <body class="admin-body">
 
-
   <main class="login-shell">
-
 
     <section class="login-card">
 
+      <div class="admin-mark">BK</div>
 
-      <!-- ADMIN LOGO -->
+      <p class="eyebrow">B.K ENTERPRISE</p>
 
-      <div class="admin-mark">
-        BE
-      </div>
+      <h1>Welcome Back.</h1>
 
-
-      <!-- BRAND NAME -->
-
-      <p class="eyebrow">
-        BRYCHI ENTERPRISES
-      </p>
-
-
-      <h1>
-        Admin Portal
-      </h1>
-
-
-      <p class="muted">
-        Sign in to manage products, prices,
+      <p>
+        Access your business workspace.
+        Sign in to manage your products, prices,
         images and availability.
       </p>
 
+      <form id="login-form">
 
-
-      <!-- LOGIN FORM -->
-
-      <form
-        id="login-form"
-        class="admin-form"
-      >
-
-
-        <!-- EMAIL -->
-
-        <label>
-
-          Email
-
+        <div>
+          <label for="email">Email Address</label>
           <input
-            id="email"
             type="email"
-            autocomplete="email"
+            id="email"
+            placeholder="Enter your email address"
+            autocomplete="username"
             required
-            placeholder="admin@email.com"
           >
+        </div>
 
-        </label>
-
-
-
-        <!-- PASSWORD -->
-
-        <label>
-
-          Password
-
+        <div>
+          <label for="password">Password</label>
           <input
-            id="password"
             type="password"
+            id="password"
+            placeholder="Enter your password"
             autocomplete="current-password"
             required
-            placeholder="••••••••"
           >
+        </div>
 
-        </label>
+        <p id="login-message" role="alert"></p>
 
-
-
-        <!-- ERROR / SUCCESS MESSAGE -->
-
-        <p
-          id="login-message"
-          class="form-message"
-          role="alert"
-        ></p>
-
-
-
-        <!-- LOGIN BUTTON -->
-
-        <button
-          class="primary-btn"
-          type="submit"
-        >
-
-          Sign In
-
+        <button type="submit" class="primary-btn">
+          Sign In to Dashboard
         </button>
-
 
       </form>
 
-
-
-      <!-- BACK TO WEBSITE -->
-
-      <a
-        class="back-link"
-        href="../index.html"
-      >
-
-        ← Back to website
-
+      <a href="../index.html" class="back-link">
+        ← Return to B.K Enterprise
       </a>
-
 
     </section>
 
+    <p style="
+      text-align:center;
+      color:#D4E5D8;
+      font-size:11px;
+      margin-top:22px;
+      letter-spacing:1px;
+    ">
+      B.K ENTERPRISE · ADMINISTRATION
+    </p>
 
   </main>
 
-
-  <!-- FIREBASE / ADMIN JAVASCRIPT -->
-
-  <script
-    type="module"
-    src="admin.js"
-  ></script>
-
+  <script type="module" src="admin.js"></script>
 
 </body>
-
 </html>

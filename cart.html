@@ -1,47 +1,114 @@
 <!DOCTYPE html>
-<html lang="en"><head>
-<meta charset="UTF-8"><meta name="viewport" content="width=device-width, initial-scale=1.0">
-<title>Brychi Enterprises — Cart</title><link rel="stylesheet" href="shared.css">
-</head><body>
+<html lang="en">
+<head>
+<meta charset="UTF-8">
+<meta name="viewport" content="width=device-width, initial-scale=1.0">
+<title>B.K. Enterprise — Shopping Cart</title>
+<link rel="stylesheet" href="shared.css">
+</head>
+<body>
+<!-- HEADER -->
 <header class="site-header">
   <div class="container navbar">
-    <a class="logo" href="index.html">Brychi <span>Enterprises</span></a>
-    <button id="menu-btn" class="menu-btn" aria-label="Open menu">☰</button>
+    <a class="logo" href="index.html">
+      B.K. <span>Enterprise</span>
+    </a>
+    <button
+      id="menu-btn"
+      class="menu-btn"
+      aria-label="Open menu"
+      aria-expanded="false"
+      aria-controls="nav-links"
+    >
+      ☰
+    </button>
     <nav id="nav-links" class="nav-links">
-      <a class="" href="index.html">Home</a>
-      <a class="" href="about.html">About Us</a>
-      <a class="" href="shop.html">Shop</a>
-      <a class="active cart-link" href="cart.html">Cart <span class="badge" id="cart-badge">0</span></a>
+      <a href="index.html">Home</a>
+      <a href="about.html">About Us</a>
+      <a href="shop.html">Shop</a>
+      <a class="active cart-link" href="cart.html">
+        Cart
+        <span class="badge" id="cart-badge">0</span>
+      </a>
     </nav>
   </div>
 </header>
-
+<!-- PAGE HERO -->
 <section class="page-hero">
   <div class="container reveal">
-    <span class="eyebrow" style="color:var(--cyan)">Your Selection</span>
+    <span class="eyebrow" style="color:var(--cyan)">
+      Your Selection
+    </span>
     <h1>Shopping cart.</h1>
-    <p>Review your products, choose delivery or pickup, then send the order details to Brychi Enterprises on WhatsApp.</p>
+    <p>
+      Review your products, provide your details,
+      choose delivery or pickup and place your order
+      directly through WhatsApp.
+    </p>
   </div>
 </section>
+<!-- CART -->
 <section class="section">
   <div class="container cart-layout">
+    <!-- PRODUCTS -->
     <div class="cart-panel reveal">
       <h2>Your Products</h2>
       <div id="cart-list"></div>
     </div>
-    <aside id="cart-summary" class="summary-panel reveal"></aside>
+    <!-- ORDER SUMMARY AND CHECKOUT -->
+    <aside
+      id="cart-summary"
+      class="summary-panel reveal"
+    ></aside>
   </div>
 </section>
-
+<!-- FOOTER -->
 <footer class="site-footer">
   <div class="container">
     <div class="footer-grid">
-      <div><h3>Brychi Enterprises</h3><p>Wellness, products and partnership opportunities presented with a modern customer experience.</p></div>
-      <div><h3>Explore</h3><p><a href="index.html">Home</a></p><p><a href="about.html">About Us</a></p><p><a href="shop.html">Shop</a></p></div>
-      <div><h3>Connect</h3><p><a target="_blank" href="https://wa.me/2348023139293">WhatsApp</a></p><p>Adeniyi Jones, Ikeja, Lagos</p></div>
+      <div>
+        <h3>B.K. Enterprise</h3>
+        <p>
+          Wellness, products and partnership opportunities
+          presented with a modern customer experience.
+        </p>
+      </div>
+      <div>
+        <h3>Explore</h3>
+        <p><a href="index.html">Home</a></p>
+        <p><a href="about.html">About Us</a></p>
+        <p><a href="shop.html">Shop</a></p>
+      </div>
+      <div>
+        <h3>Connect</h3>
+        <p>
+          <a
+            target="_blank"
+            rel="noopener"
+            href="https://wa.me/2347065489297"
+          >
+            WhatsApp
+          </a>
+        </p>
+        <p>Adeniyi Jones, Ikeja, Lagos</p>
+      </div>
     </div>
-    <div class="footer-bottom">© 2026 Brychi Enterprises. All Rights Reserved.</div>
+    <div class="footer-bottom">
+      © 2026 B.K. Enterprise. All Rights Reserved.
+    </div>
   </div>
 </footer>
+<!-- FLOATING WHATSAPP BUTTON -->
+<a
+  href="https://wa.me/2347065489297"
+  class="whatsapp-float"
+  target="_blank"
+  rel="noopener"
+  aria-label="Chat with B.K. Enterprise on WhatsApp"
+  title="Chat with us"
+>
+  ☎
+</a>
 <script type="module" src="app.js"></script>
-</body></html>
+</body>
+</html>

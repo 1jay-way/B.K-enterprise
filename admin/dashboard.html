@@ -1,464 +1,226 @@
 <!DOCTYPE html>
-
 <html lang="en">
-
 <head>
-
   <meta charset="UTF-8">
-
-  <meta
-    name="viewport"
-    content="width=device-width, initial-scale=1.0"
-  >
-
-  <title>Brychi Admin — Dashboard</title>
-
-  <link
-    rel="stylesheet"
-    href="admin.css"
-  >
-
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>B.K Enterprise | Admin Dashboard</title>
+  <link rel="stylesheet" href="admin.css">
+  <meta name="theme-color" content="#123D2B">
 </head>
-
-
-<body class="admin-body">
-
-
-
-<!-- =====================================================
-     ADMIN HEADER
-===================================================== -->
-
-<header class="admin-header">
-
-
-  <!-- BRAND -->
-
-  <a
-    class="admin-brand"
-    href="dashboard.html"
-  >
-
-    <span class="admin-mark small">
-      BE
-    </span>
-
-    <span>
-      Brychi Admin
-    </span>
-
-  </a>
-
-
-
-  <!-- HEADER ACTIONS -->
-
-  <div class="admin-actions">
-
-
-    <span
-      id="admin-email"
-      class="admin-user"
-    ></span>
-
-
-    <!-- VIEW PUBLIC SHOP -->
-
-    <a
-      class="ghost-btn"
-      href="../shop.html"
-      target="_blank"
-      rel="noopener"
-    >
-
-      View Shop
-
-    </a>
-
-
-    <!-- LOGOUT -->
-
-    <button
-      id="logout-btn"
-      class="ghost-btn"
-      type="button"
-    >
-
-      Log Out
-
-    </button>
-
-
+<body>
+  <!-- TOP HEADER -->
+  <header class="admin-header">
+<div class="admin-brand">
+  <div class="admin-mark small">BK</div>
+  <span>B.K Enterprise</span>
+</div>
+<div class="admin-actions">
+  <span id="admin-email"></span>
+  <button id="logout-btn" class="ghost-btn" type="button">
+    Sign Out ↗
+  </button>
+</div>
+  </header>
+  <main class="admin-main">
+<!-- WELCOME SECTION -->
+<section class="dashboard-heading">
+  <div>
+    <p class="eyebrow">BUSINESS CONTROL CENTRE</p>
+    <h1>Welcome Back.</h1>
+    <p>
+      Manage your products and keep your business running smoothly.
+    </p>
   </div>
-
-
-</header>
-
-
-
-<!-- =====================================================
-     MAIN DASHBOARD
-===================================================== -->
-
-<main class="admin-main">
-
-
-
-  <!-- DASHBOARD TITLE -->
-
-  <section class="dashboard-heading">
-
-
-    <div>
-
-      <p class="eyebrow">
-        PRODUCT MANAGEMENT
-      </p>
-
-
-      <h1>
-        Products Dashboard
-      </h1>
-
-
-      <p class="muted">
-
-        Upload and manage the Brychi
-        Enterprises product catalogue.
-
-      </p>
-
-    </div>
-
-
-
-    <!-- PRODUCT COUNT -->
-
-    <div class="stats-card">
-
-      <span>
-        Total products
-      </span>
-
-
-      <strong id="product-count">
-        0
-      </strong>
-
-    </div>
-
-
-  </section>
-
-
-
-
-  <!-- ===================================================
-       TWO-COLUMN DASHBOARD
-  ==================================================== -->
-
-  <section class="dashboard-grid">
-
-
-
-    <!-- =================================================
-         ADD / EDIT PRODUCT
-    ================================================== -->
-
-    <div class="panel">
-
-
-      <div class="panel-heading">
-
-
-        <div>
-
-          <p class="eyebrow">
-            CATALOGUE
-          </p>
-
-
-          <h2 id="form-title">
-            Add Product
-          </h2>
-
-        </div>
-
-
-
-        <button
-          id="cancel-edit"
-          class="text-btn hidden"
-          type="button"
-        >
-
-          Cancel edit
-
-        </button>
-
-
-      </div>
-
-
-
-
-      <!-- PRODUCT FORM -->
-
-      <form
-        id="product-form"
-        class="admin-form"
+</section>
+<!-- PRODUCT OVERVIEW -->
+<section class="stats-card">
+  <h3>TOTAL PRODUCTS IN YOUR CATALOGUE</h3>
+  <span id="product-count">0</span>
+  <p style="
+    color:#758579;
+    font-size:12px;
+    margin-top:5px;
+  ">
+    Products currently registered in your store.
+  </p>
+</section>
+<!-- MAIN WORKSPACE -->
+<section class="dashboard-grid">
+  <!-- ADD / EDIT PRODUCT -->
+  <div class="panel">
+    <div style="
+      display:flex;
+      align-items:center;
+      justify-content:space-between;
+      gap:10px;
+      margin-bottom:22px;
+    ">
+      <h2 id="form-title">Add New Product</h2>
+      <button
+        type="button"
+        id="cancel-edit"
+        hidden
       >
-
-
-        <!-- PRODUCT ID -->
-
+        Cancel
+      </button>
+    </div>
+    <form id="product-form">
+      <input
+        type="hidden"
+        id="product-id"
+      >
+      <div>
+        <label for="product-name">Product Name</label>
         <input
-          id="product-id"
-          type="hidden"
+          type="text"
+          id="product-name"
+          placeholder="Enter product name"
+          required
         >
-
-
-
-        <!-- PRODUCT NAME -->
-
-        <label>
-
-          Product name
-
-          <input
-            id="product-name"
-            type="text"
-            required
-            placeholder="Quantum Energy Device"
-          >
-
-        </label>
-
-
-
-        <!-- PRICE -->
-
-        <label>
-
-          Price (₦)
-
-          <input
-            id="product-price"
-            type="number"
-            min="0"
-            step="1"
-            required
-            placeholder="50000"
-          >
-
-        </label>
-
-
-
-        <!-- DESCRIPTION -->
-
-        <label>
-
-          Description
-
-          <textarea
-            id="product-description"
-            rows="5"
-            required
-            placeholder="Short product description..."
-          ></textarea>
-
-        </label>
-
-
-
-        <!-- PRODUCT IMAGE -->
-
-        <label>
-
-          Product image
-
-          <input
-            id="product-image"
-            type="file"
-            accept="image/*"
-          >
-
-          <small>
-
-            Upload a clear JPG, PNG or WebP image.
-
-          </small>
-
-        </label>
-
-
-
-        <!-- IMAGE PREVIEW -->
-
-        <div
-          id="image-preview-wrap"
-          class="image-preview-wrap hidden"
+      </div>
+      <div>
+        <label for="product-price">Product Price (₦)</label>
+        <input
+          type="number"
+          id="product-price"
+          placeholder="Enter product price"
+          min="0"
+          required
         >
-
-          <img
-            id="image-preview"
-            class="image-preview"
-            alt="Product preview"
-          >
-
-        </div>
-
-
-
-        <!-- PRODUCT STATUS -->
-
-        <label class="switch-row">
-
-
-          <span>
-
-            <strong>
-              Available for sale
-            </strong>
-
-            <small>
-
-              Turn this off to hide
-              the product from customers.
-
-            </small>
-
-          </span>
-
-
+      </div>
+      <div>
+        <label for="product-description">
+          Product Description
+        </label>
+        <textarea
+          id="product-description"
+          placeholder="Describe this product..."
+          required
+        ></textarea>
+      </div>
+      <div>
+        <label for="product-image">Product Image</label>
+        <input
+          type="file"
+          id="product-image"
+          accept="image/*"
+        >
+      </div>
+      <div id="image-preview-wrap" hidden>
+        <p style="
+          font-size:12px;
+          font-weight:700;
+          margin-bottom:10px;
+          color:#183326;
+        ">
+          Image Preview
+        </p>
+        <img
+          id="image-preview"
+          src=""
+          alt="Product image preview"
+        >
+      </div>
+      <div>
+        <label>
           <input
-            id="product-active"
             type="checkbox"
+            id="product-active"
             checked
           >
-
-
+          Make product visible in the store
         </label>
-
-
-
-        <!-- MESSAGE -->
-
-        <p
-          id="product-message"
-          class="form-message"
-          role="alert"
-        ></p>
-
-
-
-        <!-- SAVE -->
-
-        <button
-          id="save-product"
-          class="primary-btn"
-          type="submit"
-        >
-
-          Save Product
-
-        </button>
-
-
-      </form>
-
-
-    </div>
-
-
-
-
-    <!-- =================================================
-         PRODUCT LIST
-    ================================================== -->
-
-    <div class="panel">
-
-
-      <div class="panel-heading">
-
-
-        <div>
-
-          <p class="eyebrow">
-            INVENTORY
-          </p>
-
-
-          <h2>
-            Your Products
-          </h2>
-
-        </div>
-
-
       </div>
-
-
-
-      <!-- SEARCH -->
-
-      <div class="toolbar">
-
-        <input
-          id="product-search"
-          type="search"
-          placeholder="Search products..."
-        >
-
-      </div>
-
-
-
-      <!-- PRODUCTS WILL APPEAR HERE -->
-
-      <div
-        id="product-list"
-        class="product-admin-list"
+      <p id="product-message" role="alert"></p>
+      <button
+        type="submit"
+        id="save-product"
+        class="primary-btn"
       >
-
-        <div class="empty-state">
-
-          Loading products...
-
-        </div>
-
-      </div>
-
-
-
-      <!-- PAGINATION -->
-
-      <div
-        id="pagination"
-        class="pagination"
-      ></div>
-
-
+        Save Product
+      </button>
+    </form>
+  </div>
+  <!-- PRODUCT MANAGEMENT -->
+  <div class="panel">
+    <div class="toolbar">
+      <h2>Product Catalogue</h2>
     </div>
-
-
-  </section>
-
-
-</main>
-
-
-
-<!-- ADMIN JAVASCRIPT -->
-
-<script
-  type="module"
-  src="admin.js"
-></script>
-
-
+    <!-- BRYCHI PRODUCT IMPORT -->
+    <div style="
+      padding:18px;
+      margin-bottom:20px;
+      border:1px solid #dce8df;
+      border-radius:12px;
+      background:#f7faf7;
+    ">
+      <h3 style="
+        color:#183326;
+        font-size:15px;
+        margin-bottom:8px;
+      ">
+        Import Existing Products
+      </h3>
+      <p style="
+        color:#758579;
+        font-size:12px;
+        line-height:1.6;
+        margin-bottom:14px;
+      ">
+        Transfer the existing product catalogue into
+        B.K Enterprise without manually entering product
+        names, prices or descriptions.
+      </p>
+      <button
+        type="button"
+        id="import-brychi-products"
+        class="primary-btn"
+      >
+        Import Products
+      </button>
+      <p
+        id="import-message"
+        role="status"
+        aria-live="polite"
+        style="
+          font-size:12px;
+          margin-top:12px;
+          line-height:1.5;
+        "
+      ></p>
+    </div>
+    <!-- PRODUCT SEARCH -->
+    <div style="margin-bottom:20px;">
+      <input
+        type="search"
+        id="product-search"
+        placeholder="Search products..."
+      >
+    </div>
+    <!-- PRODUCT LIST -->
+    <div id="product-list">
+      <div class="empty-state">
+        Your products will appear here.
+      </div>
+    </div>
+    <div id="pagination"></div>
+  </div>
+</section>
+<!-- FOOTER -->
+<footer style="
+  text-align:center;
+  padding:35px 10px 10px;
+  color:#758579;
+  font-size:11px;
+">
+  <p>
+    B.K ENTERPRISE · HEALTHY LIVING, LASTING PROSPERITY.
+  </p>
+  <p style="margin-top:5px;">
+    Business Administration Portal
+  </p>
+</footer>
+  </main>
+  <script type="module" src="admin.js"></script>
 </body>
-
 </html>

@@ -1,32 +1,19 @@
 /* =========================================================
-   BRYCHI ENTERPRISES — ADMIN DASHBOARD
-   ---------------------------------------------------------
-   This file handles:
-
-   1. Admin authentication
-   2. Admin authorization
-   3. Logout
-   4. Product creation
-   5. Cloudinary image upload
-   6. Firestore product storage
-   7. Product listing
-   8. Product search
-   9. Product editing
-   10. Product deletion
-   11. Product image preview
-   12. Product pagination
-
-   IMPORTANT:
-   firebase-config.js stays in the ROOT folder.
-   Because this file is inside /admin/, we use:
-
-       ../firebase-config.js
+   B.K ENTERPRISE — ADMIN DASHBOARD
 ========================================================= */
 
 
 /* =========================================================
    FIREBASE IMPORTS
 ========================================================= */
+
+import {
+  initializeApp
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-app.js";
+
+import {
+  getFirestore
+} from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
 
 import {
   auth,
@@ -53,8 +40,30 @@ import {
   updateDoc,
   deleteDoc,
   query,
-  serverTimestamp
+  serverTimestamp,
+  writeBatch
 } from "https://www.gstatic.com/firebasejs/10.12.5/firebase-firestore.js";
+
+
+/* =========================================================
+   BRYCHI ENTERPRISES — SOURCE DATABASE
+========================================================= */
+
+const brychiFirebaseConfig = {
+  apiKey: "AIzaSyCM-JZA63wNyzYM4C3vaUiciwYOmWd6Vhc",
+  authDomain: "brychim-enterprises2.firebaseapp.com",
+  projectId: "brychim-enterprises2",
+  storageBucket: "brychim-enterprises2.firebasestorage.app",
+  messagingSenderId: "596161124096",
+  appId: "1:596161124096:web:8f48278c43db2891a305e5"
+};
+
+const brychiSourceApp = initializeApp(
+  brychiFirebaseConfig,
+  "brychiSource"
+);
+
+const brychiSourceDb = getFirestore(brychiSourceApp);
 
 
 /* =========================================================
@@ -131,6 +140,17 @@ const logoutButton =
 
 
 /* =========================================================
+   PRODUCT IMPORT ELEMENTS
+========================================================= */
+
+const importBrychiButton =
+  document.getElementById("import-brychi-products");
+
+const importMessage =
+  document.getElementById("import-message");
+
+
+/* =========================================================
    DASHBOARD STATE
 ========================================================= */
 
@@ -160,6 +180,263 @@ function showMessage(element, message, type = "") {
   if (type) {
     element.classList.add(type);
   }
+
+}
+
+
+/* =========================================================
+   FAST PRODUCT IMPORT — BRYCHI TO B.K ENTERPRISE
+========================================================= */
+
+if (importBrychiButton) {
+
+  importBrychiButton.addEventListener("click", async () => {
+
+    const confirmed = window.confirm(
+      "Import all products from Brychi Enterprises into B.K Enterprise? Existing B.K products will not be overwritten."
+    );
+
+    if (!confirmed) return;
+
+    importBrychiButton.disabled = true;
+
+    importBrychiButton.textContent = "Importing...";
+
+    try {
+
+      await firebaseReady;
+
+      /* Verify B.K administrator */
+
+      showMessage(
+        importMessage,
+        "Checking administrator access..."
+      );
+
+      if (
+        !auth.currentUser ||
+        !ADMIN_UIDS.includes(auth.currentUser.uid)
+      ) {
+
+        throw new Error(
+          "Administrator authentication required."
+        );
+
+      }
+
+
+      /* Read both product catalogues */
+
+      showMessage(
+        importMessage,
+        "Reading Brychi and B.K product catalogues..."
+      );
+
+      const [
+        brychiSnapshot,
+        bkSnapshot
+      ] = await Promise.all([
+
+        getDocs(
+          collection(
+            brychiSourceDb,
+            "products"
+          )
+        ),
+
+        getDocs(
+          collection(
+            db,
+            "products"
+          )
+        )
+
+      ]);
+
+
+      if (brychiSnapshot.empty) {
+
+        showMessage(
+          importMessage,
+          "No products were found in the Brychi database.",
+          "error"
+        );
+
+        return;
+
+      }
+
+
+      /* Identify products already in B.K */
+
+      const existingIds = new Set(
+        bkSnapshot.docs.map(
+          document => document.id
+        )
+      );
+
+      const productsToImport = [];
+
+      let skipped = 0;
+
+      brychiSnapshot.docs.forEach(sourceDocument => {
+
+        if (existingIds.has(sourceDocument.id)) {
+
+          skipped++;
+
+          return;
+
+        }
+
+        productsToImport.push({
+
+          id: sourceDocument.id,
+
+          data: sourceDocument.data()
+
+        });
+
+      });
+
+
+      /* Handle an empty import */
+
+      if (productsToImport.length === 0) {
+
+        const refreshed = await loadProducts();
+
+        showMessage(
+          importMessage,
+
+          refreshed
+            ? `Import checked successfully. No new products were needed. ${skipped} existing products were preserved.`
+            : `No new products were needed. ${skipped} existing products were preserved, but the dashboard could not refresh.`,
+
+          refreshed ? "success" : "error"
+        );
+
+        return;
+
+      }
+
+
+      /* Import products in batches */
+
+      let imported = 0;
+
+      const batchSize = 450;
+
+      const total = productsToImport.length;
+
+      for (
+        let i = 0;
+        i < total;
+        i += batchSize
+      ) {
+
+        const batch = writeBatch(db);
+
+        const currentBatch =
+          productsToImport.slice(
+            i,
+            i + batchSize
+          );
+
+
+        currentBatch.forEach(product => {
+
+          const destinationRef = doc(
+            db,
+            "products",
+            product.id
+          );
+
+          /*
+            Preserve the original document ID
+            and every original product field.
+          */
+
+          batch.set(
+            destinationRef,
+            product.data
+          );
+
+        });
+
+
+        showMessage(
+          importMessage,
+          `Preparing batch... ${imported} of ${total} products completed.`
+        );
+
+
+        await batch.commit();
+
+        imported += currentBatch.length;
+
+
+        showMessage(
+          importMessage,
+          `Imported ${imported} of ${total} products...`
+        );
+
+      }
+
+
+      /* Refresh B.K admin catalogue */
+
+      const refreshed = await loadProducts();
+
+
+      if (refreshed) {
+
+        showMessage(
+          importMessage,
+
+          `Import successful! ${imported} products imported. ${skipped} existing B.K products preserved.`,
+
+          "success"
+        );
+
+      } else {
+
+        showMessage(
+          importMessage,
+
+          `${imported} products were imported, and ${skipped} existing products were preserved. However, the dashboard could not refresh. Reload the dashboard to check the catalogue.`,
+
+          "error"
+        );
+
+      }
+
+    } catch (error) {
+
+      console.error(
+        "Brychi product import failed:",
+        error
+      );
+
+      showMessage(
+        importMessage,
+
+        `Import failed: ${error.message || "Please try again."}`,
+
+        "error"
+      );
+
+    } finally {
+
+      importBrychiButton.disabled = false;
+
+      importBrychiButton.textContent =
+        "Import Products";
+
+    }
+
+  });
+
 }
 
 
@@ -171,18 +448,11 @@ if (loginForm) {
 
   loginForm.addEventListener("submit", async (event) => {
 
-    /*
-      Prevent the browser from refreshing the page when
-      the login form is submitted.
-    */
-
     event.preventDefault();
-
 
     const email = emailInput.value.trim();
 
     const password = passwordInput.value;
-
 
     if (!email || !password) {
 
@@ -193,6 +463,7 @@ if (loginForm) {
       );
 
       return;
+
     }
 
 
@@ -201,16 +472,19 @@ if (loginForm) {
       loginButton.disabled = true;
 
       loginButton.textContent = "Signing in...";
+
     }
 
 
-    showMessage(loginMessage, "Signing you in...");
+    showMessage(
+      loginMessage,
+      "Signing you in..."
+    );
 
 
     try {
 
       await firebaseReady;
-
 
       const result =
         await signInWithEmailAndPassword(
@@ -219,16 +493,8 @@ if (loginForm) {
           password
         );
 
-
       const user = result.user;
 
-
-      /*
-        SECURITY CHECK
-
-        Only UIDs listed inside firebase-config.js
-        are allowed to access the admin dashboard.
-      */
 
       if (!ADMIN_UIDS.includes(user.uid)) {
 
@@ -241,6 +507,7 @@ if (loginForm) {
         );
 
         return;
+
       }
 
 
@@ -249,14 +516,15 @@ if (loginForm) {
         "Login successful. Opening dashboard..."
       );
 
-
       window.location.href = "dashboard.html";
 
 
     } catch (error) {
 
-      console.error("Login error:", error);
-
+      console.error(
+        "Login error:",
+        error
+      );
 
       let message =
         "Unable to sign in. Please check your details.";
@@ -264,32 +532,24 @@ if (loginForm) {
 
       if (error.code === "auth/invalid-credential") {
 
-        message =
-          "Incorrect email or password.";
-
+        message = "Incorrect email or password.";
 
       } else if (error.code === "auth/user-not-found") {
 
-        message =
-          "No account was found with this email.";
-
+        message = "No account was found with this email.";
 
       } else if (error.code === "auth/wrong-password") {
 
-        message =
-          "Incorrect password.";
-
+        message = "Incorrect password.";
 
       } else if (error.code === "auth/too-many-requests") {
 
-        message =
-          "Too many attempts. Please wait and try again.";
-
+        message = "Too many attempts. Please wait and try again.";
 
       } else if (error.code === "auth/network-request-failed") {
 
-        message =
-          "Network error. Please check your internet connection.";
+        message = "Network error. Please check your internet connection.";
+
       }
 
 
@@ -307,6 +567,7 @@ if (loginForm) {
         loginButton.disabled = false;
 
         loginButton.textContent = "Log In";
+
       }
 
     }
@@ -322,12 +583,6 @@ if (loginForm) {
 
 onAuthStateChanged(auth, async (user) => {
 
-  /*
-    If this is the LOGIN page:
-    do not automatically redirect unless the user is
-    already an authorized administrator.
-  */
-
   if (loginForm) {
 
     if (user && ADMIN_UIDS.includes(user.uid)) {
@@ -337,13 +592,9 @@ onAuthStateChanged(auth, async (user) => {
     }
 
     return;
+
   }
 
-
-  /*
-    If this is the DASHBOARD page:
-    an administrator must be logged in.
-  */
 
   if (productForm) {
 
@@ -352,6 +603,7 @@ onAuthStateChanged(auth, async (user) => {
       window.location.href = "login.html";
 
       return;
+
     }
 
 
@@ -362,22 +614,17 @@ onAuthStateChanged(auth, async (user) => {
       window.location.href = "login.html";
 
       return;
+
     }
 
-
-    /* Show administrator email */
 
     if (adminEmail) {
 
       adminEmail.textContent =
         user.email || "Administrator";
+
     }
 
-
-    /*
-      Load the products only after authentication
-      has been confirmed.
-    */
 
     await loadProducts();
 
@@ -402,7 +649,10 @@ if (logoutButton) {
 
     } catch (error) {
 
-      console.error("Logout error:", error);
+      console.error(
+        "Logout error:",
+        error
+      );
 
     }
 
@@ -422,12 +672,12 @@ if (productImageInput) {
     const file =
       productImageInput.files[0];
 
-
     if (!file) {
 
       imagePreviewWrap?.classList.add("hidden");
 
       return;
+
     }
 
 
@@ -438,6 +688,7 @@ if (productImageInput) {
     if (imagePreview) {
 
       imagePreview.src = imageURL;
+
     }
 
 
@@ -457,6 +708,7 @@ async function uploadImageToCloudinary(file) {
   if (!file) {
 
     return null;
+
   }
 
 
@@ -501,6 +753,7 @@ async function uploadImageToCloudinary(file) {
       data.error?.message ||
       "Image upload failed."
     );
+
   }
 
 
@@ -517,31 +770,20 @@ if (productForm) {
 
   productForm.addEventListener("submit", async (event) => {
 
-    /*
-      Prevent page refresh.
-
-      This is important because without this,
-      clicking "Save Product" can reload the dashboard.
-    */
-
     event.preventDefault();
 
 
     const name =
       productNameInput.value.trim();
 
-
     const price =
       Number(productPriceInput.value);
-
 
     const description =
       productDescriptionInput.value.trim();
 
-
     const active =
       productActiveInput.checked;
-
 
     const imageFile =
       productImageInput.files[0];
@@ -558,6 +800,7 @@ if (productForm) {
       productNameInput.focus();
 
       return;
+
     }
 
 
@@ -572,6 +815,7 @@ if (productForm) {
       productPriceInput.focus();
 
       return;
+
     }
 
 
@@ -586,13 +830,9 @@ if (productForm) {
       productDescriptionInput.focus();
 
       return;
+
     }
 
-
-    /*
-      When adding a completely new product,
-      an image is required.
-    */
 
     if (!editingProductId && !imageFile) {
 
@@ -603,6 +843,7 @@ if (productForm) {
       );
 
       return;
+
     }
 
 
@@ -626,15 +867,9 @@ if (productForm) {
 
       await firebaseReady;
 
-
       let imageURL =
         editingProductImage;
 
-
-      /*
-        Upload a new image if the administrator
-        selected one.
-      */
 
       if (imageFile) {
 
@@ -643,11 +878,11 @@ if (productForm) {
           "Uploading product image..."
         );
 
-
         imageURL =
           await uploadImageToCloudinary(
             imageFile
           );
+
       }
 
 
@@ -668,10 +903,6 @@ if (productForm) {
       };
 
 
-      /* ===================================================
-         EDIT EXISTING PRODUCT
-      =================================================== */
-
       if (editingProductId) {
 
         const productRef =
@@ -680,7 +911,6 @@ if (productForm) {
             "products",
             editingProductId
           );
-
 
         await updateDoc(
           productRef,
@@ -695,13 +925,7 @@ if (productForm) {
         );
 
 
-      }
-
-      /* ===================================================
-         ADD NEW PRODUCT
-      =================================================== */
-
-      else {
+      } else {
 
         productData.createdAt =
           serverTimestamp();
@@ -765,7 +989,7 @@ if (productForm) {
 
 async function loadProducts() {
 
-  if (!productList) return;
+  if (!productList) return false;
 
 
   productList.innerHTML = `
@@ -782,35 +1006,14 @@ async function loadProducts() {
     await firebaseReady;
 
 
-    /*
-      IMPORTANT:
-
-      Do NOT use orderBy("createdAt", "desc") here.
-
-      The migrated products from Lotaja do not have
-      a createdAt field, so using orderBy() would exclude
-      those documents from the query.
-
-      Loading the collection directly allows both:
-
-      - Migrated products
-      - Products created from the admin dashboard
-
-      to appear together.
-    */
-
-    const productsQuery =
-      query(
+    const snapshot =
+      await getDocs(
         collection(db, "products")
       );
 
 
-    const snapshot =
-      await getDocs(productsQuery);
-
-
-    allProducts =
-      snapshot.docs.map((document) => ({
+    const loadedProducts =
+      snapshot.docs.map(document => ({
 
         id: document.id,
 
@@ -819,21 +1022,22 @@ async function loadProducts() {
       }));
 
 
-    /*
-      Update total product count.
-    */
+    allProducts = loadedProducts;
+
 
     if (productCount) {
 
       productCount.textContent =
-        allProducts.length;
+        loadedProducts.length;
+
     }
 
 
     currentPage = 1;
 
-
     renderProducts();
+
+    return true;
 
 
   } catch (error) {
@@ -842,6 +1046,13 @@ async function loadProducts() {
       "Loading products failed:",
       error
     );
+
+
+    if (productCount) {
+
+      productCount.textContent = "—";
+
+    }
 
 
     productList.innerHTML = `
@@ -855,9 +1066,16 @@ async function loadProducts() {
         Please check your Firestore connection
         and security rules.
 
+        <br><br>
+
+        Error: ${escapeHTML(error.message)}
+
       </div>
 
     `;
+
+
+    return false;
 
   }
 
@@ -899,6 +1117,7 @@ function getFilteredProducts() {
   if (!search) {
 
     return allProducts;
+
   }
 
 
@@ -907,7 +1126,6 @@ function getFilteredProducts() {
     const name =
       String(product.name || "")
         .toLowerCase();
-
 
     const description =
       String(product.description || "")
@@ -949,17 +1167,16 @@ function renderProducts() {
 
     `;
 
-
     renderPagination(0);
 
     return;
+
   }
 
 
   const start =
     (currentPage - 1) *
     productsPerPage;
-
 
   const end =
     start +
@@ -1043,7 +1260,7 @@ function renderProducts() {
           <button
             type="button"
             class="ghost-btn edit-product"
-            data-id="${product.id}"
+            data-id="${escapeHTML(product.id)}"
           >
             Edit
           </button>
@@ -1052,7 +1269,7 @@ function renderProducts() {
           <button
             type="button"
             class="ghost-btn delete-product"
-            data-id="${product.id}"
+            data-id="${escapeHTML(product.id)}"
           >
             Delete
           </button>
@@ -1068,10 +1285,6 @@ function renderProducts() {
 
   });
 
-
-  /*
-    Edit buttons
-  */
 
   productList
     .querySelectorAll(".edit-product")
@@ -1090,10 +1303,6 @@ function renderProducts() {
 
     });
 
-
-  /*
-    Delete buttons
-  */
 
   productList
     .querySelectorAll(".delete-product")
@@ -1139,7 +1348,6 @@ function editProduct(productId) {
   editingProductId =
     product.id;
 
-
   editingProductImage =
     product.image || "";
 
@@ -1147,18 +1355,14 @@ function editProduct(productId) {
   productIdInput.value =
     product.id;
 
-
   productNameInput.value =
     product.name || "";
-
 
   productPriceInput.value =
     product.price ?? "";
 
-
   productDescriptionInput.value =
     product.description || "";
-
 
   productActiveInput.checked =
     product.active !== false;
@@ -1179,10 +1383,8 @@ function editProduct(productId) {
   formTitle.textContent =
     "Edit Product";
 
-
   saveProductButton.textContent =
     "Update Product";
-
 
   cancelEditButton.classList.remove(
     "hidden"
@@ -1195,22 +1397,11 @@ function editProduct(productId) {
   );
 
 
-  /*
-    Scroll smoothly to the product form.
-
-    This only happens when the administrator
-    intentionally clicks Edit.
-  */
-
   productForm.scrollIntoView({
     behavior: "smooth",
     block: "start"
   });
 
-
-  /*
-    Focus the product name field.
-  */
 
   setTimeout(() => {
 
@@ -1288,10 +1479,6 @@ function resetProductForm() {
   }
 
 
-  /*
-    Clear the file input completely.
-  */
-
   productImageInput.value =
     "";
 
@@ -1320,10 +1507,6 @@ async function deleteProduct(productId) {
   if (!product) return;
 
 
-  /*
-    Simple confirmation before deletion.
-  */
-
   const confirmed =
     window.confirm(
       `Delete "${product.name || "this product"}"?`
@@ -1346,11 +1529,6 @@ async function deleteProduct(productId) {
       )
     );
 
-
-    /*
-      If the administrator was editing the
-      deleted product, reset the form.
-    */
 
     if (editingProductId === productId) {
 
@@ -1401,12 +1579,9 @@ function renderPagination(totalProducts) {
   if (totalPages <= 1) {
 
     return;
+
   }
 
-
-  /*
-    Previous button
-  */
 
   const previous =
     document.createElement("button");
@@ -1415,14 +1590,11 @@ function renderPagination(totalProducts) {
   previous.type =
     "button";
 
-
   previous.className =
     "ghost-btn";
 
-
   previous.textContent =
     "Previous";
-
 
   previous.disabled =
     currentPage === 1;
@@ -1449,10 +1621,6 @@ function renderPagination(totalProducts) {
   );
 
 
-  /*
-    Page number buttons
-  */
-
   for (
     let page = 1;
     page <= totalPages;
@@ -1466,10 +1634,8 @@ function renderPagination(totalProducts) {
     button.type =
       "button";
 
-
     button.className =
       "ghost-btn";
-
 
     button.textContent =
       page;
@@ -1504,10 +1670,6 @@ function renderPagination(totalProducts) {
   }
 
 
-  /*
-    Next button
-  */
-
   const next =
     document.createElement("button");
 
@@ -1515,14 +1677,11 @@ function renderPagination(totalProducts) {
   next.type =
     "button";
 
-
   next.className =
     "ghost-btn";
 
-
   next.textContent =
     "Next";
-
 
   next.disabled =
     currentPage === totalPages;
@@ -1553,9 +1712,6 @@ function renderPagination(totalProducts) {
 
 /* =========================================================
    BASIC HTML ESCAPING
-   ---------------------------------------------------------
-   This prevents product names/descriptions from being
-   interpreted as HTML when displayed in the dashboard.
 ========================================================= */
 
 function escapeHTML(value) {
